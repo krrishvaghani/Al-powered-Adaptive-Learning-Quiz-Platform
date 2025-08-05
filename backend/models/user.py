@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+from bson import ObjectId
 from pydantic import BaseModel, Field
 
 class UserModel(BaseModel):
@@ -29,10 +30,10 @@ class UserInDB(UserModel):
     id: Optional[str] = Field(None, alias="_id")
     
     def to_dict(self) -> dict:
-        """Convert to dictionary for JSON storage"""
+        """Convert to dictionary for MongoDB"""
         data = self.dict(exclude={"id"})
         if self.id:
-            data["_id"] = self.id
+            data["_id"] = ObjectId(self.id)
         return data
     
     @classmethod
@@ -40,11 +41,6 @@ class UserInDB(UserModel):
         """Create from dictionary"""
         if "_id" in data:
             data["id"] = str(data["_id"])
-        # Convert string datetime back to datetime object if needed
-        if "created_at" in data and isinstance(data["created_at"], str):
-            data["created_at"] = datetime.fromisoformat(data["created_at"])
-        if "updated_at" in data and isinstance(data["updated_at"], str):
-            data["updated_at"] = datetime.fromisoformat(data["updated_at"])
         return cls(**data)
     
     def update_timestamp(self):

@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from bson import ObjectId
-from pydantic import BaseModel, Field
 
 class QuestionModel:
     def __init__(
@@ -63,54 +62,6 @@ class QuestionModel:
     @property
     def id(self):
         return str(self._id) if self._id else None
-
-class QuizModel(BaseModel):
-    id: Optional[str] = Field(None, alias="_id")
-    title: str = Field(..., min_length=3, max_length=200)
-    description: str = Field(..., min_length=10, max_length=1000)
-    time_limit_minutes: Optional[int] = Field(None, ge=5, le=180)
-    passing_score: int = Field(default=70, ge=0, le=100)
-    is_active: bool = Field(default=True)
-    tags: List[str] = Field(default=[])
-    question_ids: List[str] = Field(default=[])
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: Optional[datetime] = None
-
-    class Config:
-        allow_population_by_field_name = True
-        schema_extra = {
-            "example": {
-                "title": "General Knowledge Quiz",
-                "description": "A quiz to test your general knowledge skills.",
-                "time_limit_minutes": 30,
-                "passing_score": 70,
-                "is_active": True,
-                "tags": ["general", "knowledge"],
-                "question_ids": ["1", "2", "3"]
-            }
-        }
-
-class QuizInDB(QuizModel):
-    id: Optional[str] = Field(None, alias="_id")
-
-    def to_dict(self) -> dict:
-        data = self.dict(exclude={"id"})
-        if self.id:
-            data["_id"] = self.id
-        return data
-
-    @classmethod
-    def from_dict(cls, data: dict) -> "QuizInDB":
-        if "_id" in data:
-            data["id"] = str(data["_id"])
-        if "created_at" in data and isinstance(data["created_at"], str):
-            data["created_at"] = datetime.fromisoformat(data["created_at"])
-        if "updated_at" in data and isinstance(data["updated_at"], str):
-            data["updated_at"] = datetime.fromisoformat(data["updated_at"])
-        return cls(**data)
-
-    def update_timestamp(self):
-        self.updated_at = datetime.utcnow()
 
 class QuizAttemptModel:
     def __init__(

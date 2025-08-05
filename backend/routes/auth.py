@@ -5,8 +5,8 @@ from datetime import datetime
 
 from schemas.user import UserCreate, UserLogin, UserOut, UserUpdate, Token, UserProfile
 from models.user import UserInDB
-from utils.auth import get_current_user, require_role
-from services.auth_service import AuthService
+from utils.auth import get_password_hash, verify_password, create_access_token, get_current_user, require_role
+from config.database import users_collection
 
 router = APIRouter()
 
@@ -20,7 +20,30 @@ async def register_user(user: UserCreate):
     - **password**: Strong password (min 8 chars, uppercase, lowercase, digit)
     - **role**: User role (student, teacher, admin)
     """
-    return await AuthService.register_user(user)
+    # Check if user already exists
+    existing_user = await users_collection.find_one({"email": user.email})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User with this email already exists"
+        )
+    
+    # Create user model
+    user_data = UserInDB(
+        name=user.name,
+        email=user.email,
+        password_hash=get_password_hash(user.password),
+        role=user.role.value
+    )
+    
+    # Insert into database
+    result = await users_collection.insert_one(user_data.to_dict())
+    
+    return {
+        "message": "User registered successfully",
+        "user_id": str(result.inserted_id),
+        "email": user.email
+    }
 
 @router.post("/login", response_model=Token)
 async def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -30,14 +53,57 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
     - **username**: Email address
     - **password**: User password
     """
-    return await AuthService.login_user(form_data.username, form_data.password)
+    # Find user by email
+    user_data = await users_collection.find_one({"email": form_data.username})
+    if not user_data:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Verify password
+    if not verify_password(form_data.password, user_data["password_hash"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Check if user is active
+    if not user_data.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user"
+        )
+    
+    # Create access token
+    access_token = create_access_token(
+        data={"sub": user_data["email"], "role": user_data["role"]}
+    )
+    
+    # Create user response
+    user_out = UserOut(
+        id=str(user_data["_id"]),
+        name=user_data["name"],
+        email=user_data["email"],
+        role=user_data["role"],
+        created_at=user_data["created_at"],
+        updated_at=user_data.get("updated_at")
+    )
+    
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        user=user_out
+    )
 
 @router.get("/me", response_model=UserOut)
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """
     Get current user information
     """
-    user_data = await AuthService.get_user_by_email(current_user["email"])
+    user_data = await users_collection.find_one({"email": current_user["email"]})
     if not user_data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
