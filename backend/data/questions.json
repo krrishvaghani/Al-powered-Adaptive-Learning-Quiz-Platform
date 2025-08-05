@@ -1,0 +1,64 @@
+[
+  {
+    "title": "What is the capital of France?",
+    "content": "Which city serves as the capital and largest city of France?",
+    "question_type": "multiple_choice",
+    "difficulty": "easy",
+    "options": [
+      "London",
+      "Berlin",
+      "Paris",
+      "Madrid"
+    ],
+    "correct_answer": "Paris",
+    "explanation": "Paris is the capital and largest city of France, located in the north-central part of the country.",
+    "points": 1,
+    "tags": [
+      "geography",
+      "europe",
+      "capitals"
+    ],
+    "created_at": "2025-08-05T07:39:02.725566",
+    "updated_at": null,
+    "_id": "1"
+  },
+  {
+    "title": "What is 2 + 2?",
+    "content": "What is the result of adding 2 and 2?",
+    "question_type": "multiple_choice",
+    "difficulty": "easy",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "correct_answer": "4",
+    "explanation": "2 + 2 = 4",
+    "points": 1,
+    "tags": [
+      "math",
+      "basic"
+    ],
+    "created_at": "2025-08-05T07:40:09.816504",
+    "updated_at": null,
+    "_id": "2"
+  },
+  {
+    "title": "Is the Earth round?",
+    "content": "True or false: The Earth is approximately spherical in shape.",
+    "question_type": "true_false",
+    "difficulty": "easy",
+    "options": null,
+    "correct_answer": "true",
+    "explanation": "The Earth is approximately spherical, though it's slightly flattened at the poles.",
+    "points": 1,
+    "tags": [
+      "science",
+      "geography"
+    ],
+    "created_at": "2025-08-05T07:40:09.825701",
+    "updated_at": null,
+    "_id": "3"
+  }
+]

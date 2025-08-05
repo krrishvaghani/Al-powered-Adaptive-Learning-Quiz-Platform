@@ -1,0 +1,1 @@
+# AI-Powered Adaptive Learning & Quiz Platform Backend 
